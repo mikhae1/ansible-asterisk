@@ -1,0 +1,66 @@
+---
+
+- name: add user {{ asterisk_user }}
+  user:
+    name: "{{ asterisk_user }}"
+    shell: /bin/bash
+    groups:
+      - systemd-journal
+
+- name: reset directory permissions
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ asterisk_user }}"
+    group: "{{ asterisk_user }}"
+    recurse: yes
+  with_items:
+    - "{{ src_dir }}"
+    - /etc/asterisk
+    - /var/log/asterisk
+    - /var/spool/asterisk
+    - /var/lib/asterisk
+    - /var/run/asterisk
+    - /usr/lib/asterisk
+
+- name: init ld config
+  copy:
+    src: files/etc/ld.so.conf.d/asterisk.conf
+    dest: /etc/ld.so.conf.d/asterisk.conf
+    owner: root
+    group: root
+
+- name: setup asterisk config
+  copy:
+    src: "files/etc/asterisk/{{ item }}"
+    dest: /etc/asterisk
+    owner: "{{ asterisk_user }}"
+    group: "{{ asterisk_user }}"
+    backup: yes
+  with_items:
+    - sip.conf
+    - manager.conf
+    - extensions.conf
+
+- name: install systemd script
+  template:
+    src: templates/systemd/asterisk.service.j2
+    dest: /etc/systemd/system/asterisk.service
+
+- name: open firewall ports
+  firewalld:
+    port: "{{ item }}"
+    permanent: true
+    state: enabled
+  with_items:
+    - 5060/tcp
+    - 3217/tcp
+    - 5038/tcp
+
+- name: enable Asterisk service
+  systemd:
+    name: asterisk
+    daemon_reload: yes
+    enabled: yes
+    state: started
+

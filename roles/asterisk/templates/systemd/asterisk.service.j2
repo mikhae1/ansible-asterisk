@@ -1,0 +1,21 @@
+[Unit]
+Description=Asterisk PBX daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/sbin/asterisk
+ExecStop=/usr/sbin/asterisk -rx 'core stop now'
+ExecReload=/usr/sbin/asterisk -rx 'core reload'
+WorkingDirectory=/var/lib/asterisk
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=asterisk
+User={{ asterisk_user }}
+Group={{ asterisk_user }}
+
+Type=forking
+PIDFile=/var/run/asterisk/asterisk.pid
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+---
+# defaults file for asterisk
+
+asterisk_user: asterisk
+
+src_dir: /usr/src/asterisk
+
+src:
+  url: 'http://downloads.asterisk.org/pub/telephony'
+  version:
+    libpri: 1.4.15
+    dahdi: 2.10.2+2.10.2
+    asterisk: 11.20.0
+

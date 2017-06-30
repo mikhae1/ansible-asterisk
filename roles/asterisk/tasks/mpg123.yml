@@ -1,0 +1,31 @@
+---
+
+- name: create src directory for mpg123
+  file:
+    path: "{{ src_dir }}"
+    state: directory
+    owner: "{{ asterisk_user }}"
+    group: "{{ asterisk_user }}"
+    mode: 0775
+
+- name: download mpg123 sources
+  unarchive:
+    src: https://sourceforge.net/projects/mpg123/files/mpg123/1.13.4/mpg123-1.13.4.tar.bz2/download
+    dest: "{{ src_dir }}"
+    remote_src: yes
+
+- name: build and install mpg123
+  command: "{{ item }} chdir={{ src_dir }}/mpg123-1.13.4"
+  with_items:
+   - ./configure
+   - make
+   - make install
+   - mv -f /usr/local/bin/mpg123 /usr/local/bin/mpg123.bin
+
+- name: install mpg123 wrapper
+  copy:
+    src: files/usr/local/bin/mpg123
+    dest: /usr/local/bin/mpg123
+    owner: "{{ asterisk_user }}"
+    group: "{{ asterisk_user }}"
+    mode: 0755

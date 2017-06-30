@@ -1,0 +1,19 @@
+---
+# main tasks file for asterisk
+
+- include: install.yml
+  when: not skip_install is defined
+  tags: install
+
+- include: configure.yml
+  when: not skip_configure is defined
+  tags: configure
+
+- include: lame.yml
+  when: not skip_lame is defined
+  tags: lame
+
+- include: mpg123.yml
+  when: not skip_mpg123 is defined
+  tags: mpg123
+

@@ -1,0 +1,6 @@
+---
+
+- hosts: asterisk
+  roles:
+    - asterisk
+

@@ -1,0 +1,7 @@
+*.swp
+public_keys/
+group_vars/
+
+hosts
+*.retry
+

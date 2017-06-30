@@ -1,0 +1,20 @@
+#!/bin/bash
+
+files=${!#}
+ispls=${@: -2:1}
+
+#echo "called ${@}" >> /tmp/mpg123.debug
+
+if [ "$ispls" != "-@" ]; then
+  ispls=""
+else
+  ispls="-@"
+fi
+
+case "$files" in
+  *m3u*)
+    ispls="-@"
+  ;;
+esac
+
+/usr/local/bin/mpg123.bin -q -s --mono -r 8000 -m $ispls ${files}

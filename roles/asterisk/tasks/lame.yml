@@ -1,0 +1,24 @@
+---
+
+- name: create src directory for lame
+  file:
+    path: "{{ src_dir }}"
+    state: directory
+    owner: "{{ asterisk_user }}"
+    group: "{{ asterisk_user }}"
+    mode: 0775
+
+- name: download lame sources
+  unarchive:
+    src: https://fossies.org/linux/misc/lame-3.99.5.tar.gz
+    dest: "{{ src_dir }}"
+    remote_src: yes
+
+- name: build and install lame
+  command: "{{ item }} chdir={{ src_dir }}/lame-3.99.5"
+  with_items:
+   - ./configure
+   - make
+   - make install
+   - ln -sf /usr/local/bin/lame /usr/bin/lame
+
