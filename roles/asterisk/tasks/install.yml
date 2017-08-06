@@ -24,6 +24,10 @@
 - name: remove existing src dir
   file: "path={{ src_dir }} state=absent"
 
+- name: add asterisk user {{ asterisk_user }}
+  user:
+    name: "{{ asterisk_user }}"
+
 - name: create src directory structure
   file:
     path: "{{ item }}"

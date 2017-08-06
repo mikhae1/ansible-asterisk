@@ -1,12 +1,5 @@
 ---
 
-- name: add user {{ asterisk_user }}
-  user:
-    name: "{{ asterisk_user }}"
-    shell: /bin/bash
-    groups:
-      - systemd-journal
-
 - name: reset directory permissions
   file:
     path: "{{ item }}"
