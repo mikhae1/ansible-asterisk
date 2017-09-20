@@ -21,4 +21,3 @@
    - make
    - make install
    - ln -sf /usr/local/bin/lame /usr/bin/lame
-

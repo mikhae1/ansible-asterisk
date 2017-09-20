@@ -1,4 +1,10 @@
 ---
+# Configure Asterisk after install
+
+- name: install asterisk {{ src.version.asterisk }} config samples
+  command: "{{ item }} chdir={{ src_dir }}/asterisk-{{ src.version.asterisk }}"
+  with_items:
+    - make samples
 
 - name: reset directory permissions
   file:
@@ -44,11 +50,11 @@
   firewalld:
     port: "{{ item }}"
     permanent: true
+    immediate: true
     state: enabled
   with_items:
     - 5060/tcp
     - 3217/tcp
-    - 5038/tcp
 
 - name: enable Asterisk service
   systemd:
@@ -56,4 +62,3 @@
     daemon_reload: yes
     enabled: yes
     state: started
-

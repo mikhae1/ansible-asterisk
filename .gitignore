@@ -1,7 +1,11 @@
-*.swp
 public_keys/
 group_vars/
 
-hosts
+*.swp
+*.bak
+*.pub
+hosts*
 *.retry
+
+ansible.cfg
 

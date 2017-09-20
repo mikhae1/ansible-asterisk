@@ -1,7 +1,8 @@
 ---
+# Install Asterisk
 
 - name: install kernell headers
-  shell: 'yum install -y "kernel-devel-uname-r == $(uname -r)"'
+  shell: 'yum install -y "kernel-devel-$(uname -r)"'
   register: ps
 - debug: var=ps.stdout_lines
 
@@ -20,13 +21,41 @@
     - gcc-c++
     - sqlite-devel
     - libuuid-devel
+    - bzip2
+    - jansson-devel
+
+- name: add user {{ asterisk_user }}
+  user:
+    name: "{{ asterisk_user }}"
+    shell: /bin/bash
+    groups:
+      - systemd-journal
+
+- stat:
+    path: "{{ src_dir }}"
+  register: prev
+  tags: uninstall
+
+- name: remove previous installation
+  shell: |
+    cd {{ src_dir }}
+    for d in * ; do
+      if [ -d "$d" ]; then
+        echo -e "\nrunning 'make uninstall' at: $d"
+        pushd "$d"
+          make uninstall
+        popd
+      fi
+    done
+  register: ps
+  when: prev.stat.isdir is defined and prev.stat.isdir
+  tags: uninstall
+
+- debug: var=ps.stdout_lines
+  tags: uninstall
 
 - name: remove existing src dir
   file: "path={{ src_dir }} state=absent"
-
-- name: add asterisk user {{ asterisk_user }}
-  user:
-    name: "{{ asterisk_user }}"
 
 - name: create src directory structure
   file:
@@ -39,17 +68,19 @@
   with_items:
     - "{{ src_dir }}"
 
-- name: download asterisk libpri {{ src.version.libpri }} sources
-  unarchive:
-    src: "{{ src.url }}/libpri/releases/libpri-{{ src.version.libpri }}.tar.gz"
-    dest: "{{ src_dir }}"
-    remote_src: yes
-
 - name: download asterisk dahdi {{ src.version.dahdi }} sources
   unarchive:
     src: "{{ src.url }}/dahdi-linux-complete/dahdi-linux-complete-{{ src.version.dahdi }}.tar.gz"
     dest: "{{ src_dir }}"
     remote_src: yes
+  when: not skip_dahdi
+
+- name: download asterisk libpri {{ src.version.libpri }} sources
+  unarchive:
+    src: "{{ src.url }}/libpri/releases/libpri-{{ src.version.libpri }}.tar.gz"
+    dest: "{{ src_dir }}"
+    remote_src: yes
+  when: not skip_libpri
 
 - name: download asterisk {{ src.version.asterisk }} sources
   unarchive:
@@ -57,53 +88,50 @@
     dest: "{{ src_dir }}"
     remote_src: yes
 
-# install dahdi
+# install dahdi. should be installed before libpri.
 - name: make dahdi {{ src.version.dahdi }}
   command: "make chdir={{ src_dir }}/dahdi-linux-complete-{{ src.version.dahdi }}"
+  when: not skip_dahdi
+
 - name: make install dahdi {{ src.version.dahdi }}
   command: make install
   args:
     chdir: "{{ src_dir }}/dahdi-linux-complete-{{ src.version.dahdi }}"
+  when: not skip_dahdi
+
 - name: make config dahdi {{ src.version.dahdi }}
   command: make config
   args:
     chdir: "{{ src_dir }}/dahdi-linux-complete-{{ src.version.dahdi }}"
+  when: not skip_dahdi
 
 # install pri
 - name: make libpri {{ src.version.libpri }}
   command: "make chdir={{ src_dir }}/libpri-{{ src.version.libpri }}"
+  when: not skip_libpri
+
 - name: make install libpri {{ src.version.libpri }}
   command: make install
   args:
     chdir: "{{ src_dir }}/libpri-{{ src.version.libpri }}"
+  when: not skip_libpri
 
 # install asterisk
-- name: configure asterisk {{ src.version.asterisk }}
+- name: make configure for asterisk {{ src.version.asterisk }}
   command: ./configure --libdir=/usr/lib64 CC="gcc -O3" CFLAGS=-O3
   args:
     chdir: "{{ src_dir }}/asterisk-{{ src.version.asterisk }}"
 
-- name: configure asterisk menuselect
+- name: make configure menuselect for asterisk
   shell: "{{ item }} chdir={{ src_dir }}/asterisk-{{ src.version.asterisk }}"
   with_items:
    - rm menuselect.makeopts || true
    - make menuselect.makeopts
-   - sed -ie 's/CORE-SOUNDS-EN-GSM/CORE-SOUNDS-EN-GSM CORE-SOUNDS-RU-GSM/' menuselect.makeopts
-   - sed -ie 's/LOADABLE_MODULES/DONT_OPTIMIZE LOADABLE_MODULES/' menuselect.makeopts
+   - menuselect/menuselect --disable BUILD_NATIVE menuselect.makeopts
+   - menuselect/menuselect --enable CORE-SOUNDS-RU-GSM menuselect.makeopts
 
 - name: building asterisk {{ src.version.asterisk }}
   command: "{{ item }} chdir={{ src_dir }}/asterisk-{{ src.version.asterisk }}"
   with_items:
     - make
     - make install
-    - make samples
-
-#- name: Reboot
-#    shell: nohup bash -c «sleep 2s && reboot» &
-#    when: kernel_update.changed
-#    async: 0
-#    poll: 0
-#    ignore_errors: true
-#  register: reboot
-
-

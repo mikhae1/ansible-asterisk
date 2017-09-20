@@ -16,4 +16,3 @@
 - include: mpg123.yml
   when: not skip_mpg123 is defined
   tags: mpg123
-

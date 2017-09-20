@@ -2,13 +2,17 @@
 # defaults file for asterisk
 
 asterisk_user: asterisk
-
 src_dir: /usr/src/asterisk
+
+# if you are not integrating with any traditional telephony equipment
+# and you are not planning on using the MeetMe dialplan application,
+# then you do not have to install DAHDI or libpri in order to use Asterisk
+skip_libpri: yes
+skip_dahdi: yes
 
 src:
   url: 'http://downloads.asterisk.org/pub/telephony'
   version:
-    libpri: 1.4.15
-    dahdi: 2.10.2+2.10.2
-    asterisk: 11.20.0
-
+    dahdi: 2.11.1+2.11.1
+    libpri: 1.6.0
+    asterisk: 13.17.1
